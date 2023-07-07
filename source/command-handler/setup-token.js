@@ -17,16 +17,21 @@ module.exports = {
       admin: interaction.user.id,
     };
 
-    const reference = (await db.collection('configuration').doc(input.guild).get()).data();
-
     const invalidToken = async ({ token }) => {
       console.log(`Invalid: ${token}`)
     }
 
     const validToken = async ({ token }) => {
+      const reference = (await db.collection('configuration').doc(input.guild).get()).data();
       console.log(`Valid: ${token}`)
     }
 
-    reference.token ? validToken(input) : invalidToken(input);
+    try {  // Try/Catch for Nitrado issues.
+      const url = 'https://oauth.nitrado.net/token';
+      const response = await axios.get(url, { headers: { 'Authorization': input.token } });
+      response.status === 200 ? validToken(input) : invalidToken(input);
+
+    } catch (error) { invalidToken(input) };
+
   }
 };
