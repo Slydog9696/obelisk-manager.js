@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, ChannelType, EmbedBuilder } = require('discord.js');
+const { FieldValue } = require('@google-cloud/firestore')
 const { db } = require('../script.js')
 const axios = require('axios');
 
@@ -21,7 +22,7 @@ module.exports = {
       console.log(`Invalid: ${token}`)
     }
 
-    const validToken = async ({ token, guild }) => {
+    const validToken = async ({ token }) => {
       console.log(`Valid: ${token}`)
 
       const mainManagement = await interaction.guild.channels.create({
@@ -54,12 +55,12 @@ module.exports = {
         parent: mainLogging,
       });
 
-      const reference = await db.collection('configuration').doc(guild)
+      const reference = await db.collection('configuration').doc(input.guild)
         .set(
           {
             ['channels']: { status: status.id, message: message.id },
             ['logging']: { audit: audit.id },
-            ['token']: { token: token }
+            ['tokens']: [input.token]
           }, { merge: true }
         );
     }
@@ -68,10 +69,11 @@ module.exports = {
       const url = 'https://oauth.nitrado.net/token';
       const response = await axios.get(url, { headers: { 'Authorization': input.token } });
       response.status === 200 ? validToken(input) : invalidToken(input);
+      console.log(response.status)
 
     } catch (error) { invalidToken(input) };
 
   }
 };
 
-//       const reference = (await db.collection('configuration').doc(input.guild).get()).data();
+// const reference = (await db.collection('configuration').doc(input.guild).get()).data();
