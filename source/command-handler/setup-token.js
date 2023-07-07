@@ -19,10 +19,12 @@ module.exports = {
     };
 
     const invalidToken = async ({ token }) => {
+      await interaction.deferReply({ ephemeral: true });
       console.log(`Invalid: ${token}`)
     }
 
-    const validToken = async ({ token }) => {
+    const validToken = async ({ token, guild }) => {
+      await interaction.deferReply({ ephemeral: false });
       console.log(`Valid: ${token}`)
 
       const mainManagement = await interaction.guild.channels.create({
@@ -55,25 +57,35 @@ module.exports = {
         parent: mainLogging,
       });
 
-      const reference = await db.collection('configuration').doc(input.guild)
-        .set(
-          {
-            ['channels']: { status: status.id, message: message.id },
-            ['logging']: { audit: audit.id },
-            ['tokens']: [input.token]
-          }, { merge: true }
-        );
+      await db.collection('configuration').doc(guild).delete()
+        .then(async () => {
+          await db.collection('configuration').doc(guild).set(
+            {
+              channels: { status: status.id, message: message.id },
+              logging: { audit: audit.id },
+              tokens: [input.token]
+            },
+            { merge: true }
+          );
+        });
+
+
+      const embed = new EmbedBuilder()
+        .setColor('#2ecc71')
+        .setTitle('`Obelisk Management`')
+        .setDescription(`\`🟢\` \`System Success\`\nYou've successfully linked your token.\nAuthorization token \`1\` of \`4\` uploaded.\n\n**Additional Information**\nConsider joining our [guild](https://discord.gg/jee3ukfvVr) for updates!\nActive development and support.\n\`Note: Happy hosting!\``)
+        .setFooter({ text: 'Tip: Contact support if there are issues.' })
+
+      await interaction.followUp({ embeds: [embed] })
     }
 
     try {  // Try/Catch for Nitrado issues.
       const url = 'https://oauth.nitrado.net/token';
       const response = await axios.get(url, { headers: { 'Authorization': input.token } });
       response.status === 200 ? validToken(input) : invalidToken(input);
-      console.log(response.status)
 
     } catch (error) { invalidToken(input) };
 
   }
 };
 
-// const reference = (await db.collection('configuration').doc(input.guild).get()).data();
