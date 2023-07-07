@@ -28,7 +28,14 @@ module.exports = {
 
     const responseSuccess = async ({ username, reason, guild, admin }) => {
       const unix = Math.floor(Date.now() / 1000);
+
+      // Collector, for player searching.
       await db.collection('player-banned').doc(guild).set({
+        [username]: { reason: reason, unix: unix, admin: admin }
+      }, { merge: true })
+
+      // Collector, for button reaction.
+      await db.collection('player-metadata').doc(interaction.id).set({
         [username]: { reason: reason, unix: unix, admin: admin }
       }, { merge: true })
     };
