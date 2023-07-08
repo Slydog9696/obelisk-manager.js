@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { db } = require('../script.js')
+const { FieldValue } = require('@google-cloud/firestore');
+const { db } = require('../script.js');
 const axios = require('axios');
 
 process.on("unhandledRejection", (err) => console.error(err));
@@ -17,17 +18,24 @@ module.exports = {
     const input = {
       username: interaction.options.getString('username'),
       guild: interaction.guild.id,
+      admin: interaction.user.id,
     };
 
-    const responseFailure = async ({ }) => {
+    let { username, guild, admin } = input;
+    username = username.includes('#') ? username.replace('#', '') : username;
 
-    };
+    console.log(username)
+    const inputFailure = async () => {
+      const embed = new EmbedBuilder()
+        .setColor('#e67e22')
+        .setTitle('`Obelisk Management`')
+        .setDescription(`\`🟠\` \`System Failure\`\nThe selected user cannot be located.\nEnsure correct spelling and caps.\n\n**Additional Information**\nNitrado has yet to register this player.`)
+        .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-    const responseSuccess = async ({ username, guild }) => {
+      return await interaction.followUp({ embeds: [embed] });
+    }
 
-    };
-
-    const reference = (await db.collection('configuration').doc(input.guild).get()).data();
+    const reference = (await db.collection('configuration').doc(guild).get()).data();
     console.log(reference.tokens)
 
     const url = 'https://api.nitrado.net/services';
@@ -40,29 +48,26 @@ module.exports = {
     try {
       const action = response.data.data.services.map(async server => {
         const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
-        const response = await axios.delete(url, { headers: { 'Authorization': reference.tokens[0] } }, { identifier: input.username });
+        const response = await axios.delete(url, { headers: { 'Authorization': reference.tokens[0] } }, { identifier: username },);
         console.log(response.status);
 
-        response.status === 200 ? responseSuccess(input, success++) : responseFailure(input, failure++);
+        response.status === 200 ? success++ : failure++;
       });
 
-      await Promise.all(action);
-      const embed = new EmbedBuilder()
-        .setColor('#2ecc71')
-        .setTitle('`Obelisk Management`')
-        .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been unbanned.\nUnbanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:F>`)
-        .setFooter({ text: 'Tip: Contact support if there are issues.' })
+      await Promise.all(action).then(async () => {
+        await db.collection('player-banned').doc(guild).set({
+          [username]: FieldValue.delete()
+        }, { merge: true });
+      });
 
-      await interaction.followUp({ embeds: [embed] });
+    } catch (error) { if (error.response.data.message === "Can't lookup player name to ID.") return inputFailure(); };
 
-    } catch (error) {
-      const embed = new EmbedBuilder()
-        .setColor('#2ecc71')
-        .setTitle('`Obelisk Management`')
-        .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been unbanned.\nUnbanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:F>`)
-        .setFooter({ text: 'Tip: Contact support if there are issues.' })
+    const embed = new EmbedBuilder()
+      .setColor('#2ecc71')
+      .setTitle('`Obelisk Management`')
+      .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been unbanned.\nUnbanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:F>`)
+      .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
-      await interaction.followUp({ embeds: [embed] });
-    }
+    await interaction.followUp({ embeds: [embed] });
   }
 };
