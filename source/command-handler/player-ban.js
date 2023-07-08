@@ -29,8 +29,10 @@ module.exports = {
       admin: interaction.user.id,
     };
 
-    input.username = input.username.includes('#') ? input.username.replace('#', '') : input.username;
+    let { username, reason, guild, admin } = input;
+    username = username.includes('#') ? username.replace('#', '') : username;
 
+    console.log(username)
     const inputFailure = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
@@ -41,23 +43,7 @@ module.exports = {
       return await interaction.followUp({ embeds: [embed] });
     }
 
-    const responseFailure = async ({ }) => {
-      const embed = new EmbedBuilder()
-        .setColor('#2ecc71')
-        .setTitle('`Obelisk Management`')
-        .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been banned.\nBanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:F>\n\nRemoved for ${input.reason}.`)
-        .setFooter({ text: 'Tip: Contact support if there are issues.' })
-
-      return await interaction.followUp({ embeds: [embed] });
-    };
-
-    const responseSuccess = async ({ username, reason, guild, admin }) => {
-      await db.collection('player-banned').doc(guild).set({
-        [username]: { admin: admin, reason: reason, unix: unix }
-      }, { merge: true })
-    };
-
-    const reference = (await db.collection('configuration').doc(input.guild).get()).data();
+    const reference = (await db.collection('configuration').doc(guild).get()).data();
     console.log(reference.tokens)
 
     const url = 'https://api.nitrado.net/services';
@@ -69,28 +55,27 @@ module.exports = {
 
     try {
       const action = response.data.data.services.map(async server => {
-        const url = `https://api.nitrado.net/services/${9641343}/gameservers/games/banlist`;
-        const response = await axios.post(url, { identifier: input.username }, { headers: { 'Authorization': reference.tokens[0] } });
+        const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
+        const response = await axios.post(url, { identifier: username }, { headers: { 'Authorization': reference.tokens[0] } });
         console.log(response.status);
 
-        response.status === 200 ? responseSuccess(input, success++) : responseFailure(input, failure++);
+        response.status === 200 ? success++ : failure++;
       });
 
-      await Promise.all(action);
+      await Promise.all(action).then(async () => {
+        await db.collection('player-banned').doc(guild).set({
+          [username]: { admin: admin, reason: reason, unix: unix }
+        }, { merge: true });
+      });
 
-    } catch (error) {
-      return error.response.data.message === "Can't lookup player name to ID."
-        ? inputFailure() // End user input invalid tag.
-        : serverFailure() // Error with server.
-    };
+    } catch (error) { if (error.response.data.message === "Can't lookup player name to ID.") return inputFailure(); };
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
       .setTitle('`Obelisk Management`')
-      .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been banned.\nBanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:F>\n\nRemoved for ${input.reason}.`)
+      .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been banned.\nBanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:F>\n\nRemoved for ${reason}.`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
     await interaction.followUp({ embeds: [embed] });
-
   }
 };
