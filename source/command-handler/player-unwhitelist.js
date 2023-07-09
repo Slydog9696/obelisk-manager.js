@@ -40,7 +40,7 @@ module.exports = {
 
     const url = 'https://api.nitrado.net/services';
     const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
-    const serverArray = [...response.data.data.services]; // Total servers, used for ban calc.
+    const serverArray = [...response.data.data.services]; // Total servers, used for calc.
 
     let failure = 0;
     let success = 0;
