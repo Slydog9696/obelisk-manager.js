@@ -33,7 +33,7 @@ module.exports = {
     username = username.includes('#') ? username.replace('#', '') : username;
 
     console.log(username)
-    const inputFailure = async () => {
+    const invalidPlayer = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
         .setTitle('`Obelisk Management`')
@@ -68,7 +68,7 @@ module.exports = {
         }, { merge: true });
       });
 
-    } catch (error) { if (error.response.data.message === "Can't lookup player name to ID.") return inputFailure(); };
+    } catch (error) { if (error.response.data.message === "Can't lookup player name to ID.") return invalidPlayer(); };
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
