@@ -79,12 +79,12 @@ module.exports = {
     await interaction.followUp({ embeds: [embed] });
 
     //! Confirm player, push to database ~
-    const validPlayer = async ({ name, server, last_online }) => {
+    const validPlayer = async ({ name, server, id, last_online }) => {
       const unix = Math.floor(Date.parse(last_online) / 1000);
 
-      await db.collection('player-metadata').doc(guild).set({
-        [name]: { server_name: server.details.name, location: server.id, last_online: unix }
-      }, { merge: true });
+      await db.collection('player-metadata').doc('metadata').set({
+        [name]: { server_name: server.details.name, uuid: id, last_online: unix, reason: reason }
+      }, { merge: true })
     };
 
     //! Filter player, ensure they exist ~
@@ -93,12 +93,12 @@ module.exports = {
     };
 
     try {
-      response.data.data.services.map(async server => {
+      response.data.data.services.forEach(async server => {
         const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/players`;
         const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
         response.status === 200 ? filterPlayer(response.data.data.players, server) : null
       });
 
-    } catch (error) { console.log(error) };
+    } catch (error) { console.log('Cannot locate in-game player.') };
   }
 };
