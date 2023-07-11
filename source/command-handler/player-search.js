@@ -23,10 +23,10 @@ module.exports = {
       search: interaction.options.getString('search-algorithm'),
       guild: interaction.guild.id,
     };
+
     let { username, guild, search } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
-    console.log(search)
     const reference = (await db.collection('configuration').doc(guild).get()).data();
     console.log(reference.tokens)
 
@@ -34,10 +34,9 @@ module.exports = {
     const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
     const serverArray = [...response.data.data.services]; // Total servers, used for ban calc.
 
-    let failure = 0;
-    let success = 0;
     let output = '';
     let playerFound = false;
+    let failure, success = 0;
     const validPlayer = ({ id, name, online, last_online, server }) => {
       const unix = Math.floor(Date.parse(last_online) / 1000);
       playerFound = true;

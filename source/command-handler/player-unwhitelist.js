@@ -38,12 +38,10 @@ module.exports = {
     const reference = (await db.collection('configuration').doc(guild).get()).data();
     console.log(reference.tokens)
 
+    let failure, success = 0;
     const url = 'https://api.nitrado.net/services';
     const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
     const serverArray = [...response.data.data.services]; // Total servers, used for calc.
-
-    let failure = 0;
-    let success = 0;
 
     try {
       const action = response.data.data.services.map(async server => {
