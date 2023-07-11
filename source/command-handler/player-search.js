@@ -11,7 +11,7 @@ module.exports = {
     .addStringOption(option => option.setName('username').setDescription('description').setRequired(true))
     .addStringOption(option => option.setName('search-algorithm').setDescription('description').setRequired(true)
       .addChoices(
-        { name: 'Type: Noraml-Search', value: 'filter' }, //! General match, any.
+        { name: 'Type: Filter-Search', value: 'filter' }, //! General match, any.
         { name: 'Type: Strict-Search', value: 'strict' }, //! Exact match, only.
       )),
 
