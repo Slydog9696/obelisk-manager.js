@@ -63,7 +63,7 @@ module.exports = {
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
       .setTitle('`Obelisk Management`')
-      .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been whitelisted.\nWhitelisted from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:F>`)
+      .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been whitelisted.\nWhitelisted from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:f>`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
     await interaction.followUp({ embeds: [embed] });

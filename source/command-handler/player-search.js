@@ -41,8 +41,8 @@ module.exports = {
       const unix = Math.floor(Date.parse(last_online) / 1000);
       playerFound = true;
       online
-        ? output += `\`🟢\` \`Player Online\`\n\`🔗\` ${id}\n\`🔗\` ${server.details.name}\n\`🔗\` <t:${unix}:F>\n\`\`\`${name}\`\`\`\n\n`
-        : output += `\`🟠\` \`Player Offline\`\n\`🔗\` ${id}\n\`🔗\` ${server.details.name}\n\`🔗\` <t:${unix}:F>\n\`\`\`${name}\`\`\`\n\n`
+        ? output += `\`🟢\` \`Player Online\`\n\`🔗\` ${id}\n\`🔗\` ${server.details.name}\n\`🔗\` <t:${unix}:f>\n\`\`\`${name}\`\`\`\n\n`
+        : output += `\`🟠\` \`Player Offline\`\n\`🔗\` ${id}\n\`🔗\` ${server.details.name}\n\`🔗\` <t:${unix}:f>\n\`\`\`${name}\`\`\`\n\n`
     }
 
     const filterPlayer = (players, server) => {

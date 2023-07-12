@@ -71,12 +71,11 @@ module.exports = {
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
       .setTitle('`Obelisk Management`')
-      .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been banned.\nBanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:F>\n\nRemoved for ${reason}.`)
+      .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been banned.\nBanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
     await interaction.followUp({ embeds: [embed] });
 
-    //! Confirm player, push to database ~
     const validPlayer = async ({ name, server, id, last_online }) => {
       const unix = Math.floor(Date.parse(last_online) / 1000);
 
@@ -85,7 +84,6 @@ module.exports = {
       }, { merge: true })
     };
 
-    //! Filter player, ensure they exist ~
     const filterPlayer = async (players, server) => {
       players.forEach(player => player.name === username ? validPlayer({ ...player, server }) : null)
     };
@@ -100,3 +98,6 @@ module.exports = {
     } catch (error) { console.log('Cannot locate in-game player.') };
   }
 };
+
+//? Ban failed, search player, collect uuid. 
+//? Search player failed, search database. 
