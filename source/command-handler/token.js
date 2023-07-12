@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, ChannelType, EmbedBuilder } = require('discord.js');
-const { FieldValue } = require('@google-cloud/firestore')
 const { db } = require('../script.js')
 const axios = require('axios');
 
@@ -12,6 +11,8 @@ module.exports = {
     .addStringOption(option => option.setName('token').setDescription('description').setRequired(true)),
 
   async execute(interaction) {
+    await interaction.deferReply({ ephemeral: true });
+
     const input = {
       token: interaction.options.getString('token'),
       guild: interaction.guild.id,
@@ -19,12 +20,10 @@ module.exports = {
     };
 
     const invalidToken = async ({ token }) => {
-      await interaction.deferReply({ ephemeral: true });
       console.log(`Invalid: ${token}`)
     }
 
     const validToken = async ({ token, guild }) => {
-      await interaction.deferReply({ ephemeral: false });
       console.log(`Valid: ${token}`)
 
       const mainManagement = await interaction.guild.channels.create({
