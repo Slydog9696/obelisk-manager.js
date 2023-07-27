@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { db } = require('../script.js')
+const { db } = require('../script.js');
 const axios = require('axios');
 
 process.on("unhandledRejection", (err) => console.error(err));

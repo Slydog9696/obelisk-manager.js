@@ -1,11 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { db } = require('../script.js')
+const { db } = require('../script.js');
 
 process.on("unhandledRejection", (err) => console.error(err));
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('database-search')
+    .setName('player-lookup')
     .setDescription('description ...')
     .addStringOption(option => option.setName('username').setDescription('description').setRequired(true)),
 
@@ -34,7 +34,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor('#2ecc71')
         .setTitle('`Obelisk Management`')
-        .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been located.\nLocal data will be shown below.\n\n<t:${unix}:F>\nRemoved for ${reason}.\n||<@${admin}>||`)
+        .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been located.\nLocal data will be shown below.\n\n<t:${unix}:F>\nRemoved for ${reason}.\n<@${admin}>`)
         .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
       playerFound = true;
