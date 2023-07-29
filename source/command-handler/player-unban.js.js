@@ -47,7 +47,7 @@ module.exports = {
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
             .setTitle('`Obelisk Management`')
-            .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been banned.\nBanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
+            .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been unbanned.\nUnbanned from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
           await interaction.followUp({ embeds: [embed] });

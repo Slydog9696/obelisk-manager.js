@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { FieldValue } = require('@google-cloud/firestore');
 const { db } = require('../script.js');
 const axios = require('axios');
 
@@ -52,11 +51,7 @@ module.exports = {
         response.status === 200 ? success++ : failure++;
       });
 
-      await Promise.all(action).then(async () => {
-        await db.collection('player-whitelisted').doc(guild).set({
-          [username]: { admin: admin, unix: unix }
-        }, { merge: true });
-      });
+      await Promise.all(action)
 
     } catch (error) { if (error.response.data.message === "Can't lookup player name to ID.") return inputFailure(); };
 
