@@ -32,7 +32,6 @@ module.exports = {
     let { username, reason, guild, admin } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
-
     const secondaryBanFailure = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
