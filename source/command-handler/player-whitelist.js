@@ -28,9 +28,9 @@ module.exports = {
     const inputFailure = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
-        .setTitle('`Obelisk Management`')
-        .setDescription(`\`🟠\` \`System Failure\`\nThe selected user cannot be located.\nEnsure correct spelling and caps.\n\n**Additional Information**\nNitrado has yet to register this player.`)
+        .setDescription(`**Game Command Failure**\nSelected player not located.\nPlease try again in an hour.\n\n**Additional Information**\nAwaiting player registration.`)
         .setFooter({ text: 'Tip: Contact support if there are issues.' })
+        .setThumbnail('https://i.imgur.com/PCD2pG4.png')
 
       return await interaction.followUp({ embeds: [embed] });
     }
@@ -58,9 +58,9 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
-      .setTitle('`Obelisk Management`')
-      .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been unwhitelisted.\nUnwhitelisted from \`${success}\` of \`${serverArray.length}\` servers.\n<t:${unix}:f>`)
+      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nThe player was whitelisted.\n<t:${unix}:f>`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
+      .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
     await interaction.followUp({ embeds: [embed] });
   }

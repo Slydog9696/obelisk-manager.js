@@ -54,7 +54,7 @@ module.exports = {
         await Promise.all(action).then(async () => {
           const embed = new EmbedBuilder()
             .setColor('#2ecc71')
-            .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nSelected player was banned.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
+            .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nThe player was banned.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
             .setFooter({ text: 'Tip: Contact support if there are issues.' })
             .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
@@ -96,7 +96,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
-      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nSelected player was banned.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
+      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nThe player was banned.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
       .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
