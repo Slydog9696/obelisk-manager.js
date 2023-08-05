@@ -23,9 +23,9 @@ module.exports = {
     const invalidPlayer = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
-        .setTitle('`Obelisk Management`')
-        .setDescription(`\`🟠\` \`System Failure\`\nThe selected user cannot be located.\nDatabase document does not exist.\n\n**Additional Information**\nThe player is not currently banned.`)
+        .setDescription(`**Game Command Failure**\nSelected player not located.\nBan information not found.`)
         .setFooter({ text: 'Tip: Contact support if there are issues.' })
+        .setThumbnail('https://i.imgur.com/PCD2pG4.png')
 
       return await interaction.followUp({ embeds: [embed] });
     }
@@ -33,9 +33,9 @@ module.exports = {
     const validPlayer = async ({ admin, reason, unix }) => {
       const embed = new EmbedBuilder()
         .setColor('#2ecc71')
-        .setTitle('`Obelisk Management`')
-        .setDescription(`\`🟢\` \`System Success\`\nThe selected user has been located.\nLocal data will be shown below.\n\n<t:${unix}:F>\nRemoved for ${reason}.\n<@${admin}>`)
+        .setDescription(`**Game Command Success**\nSelected user was located.\n<t:${unix}:f>\n\nRemoved for ${reason}.\nBy: <@${admin}>`)
         .setFooter({ text: 'Tip: Contact support if there are issues.' })
+        .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
       playerFound = true;
       return await interaction.followUp({ embeds: [embed] });
