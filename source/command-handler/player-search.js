@@ -25,7 +25,7 @@ module.exports = {
     };
 
     let { username, guild, search } = input;
-    username = username.includes('#') ? username.replace('#', '') : username;
+    username = username.toLowerCase().includes('#') ? username.replace('#', '') : username.toLowerCase();
 
     const reference = (await db.collection('configuration').doc(guild).get()).data();
     console.log(reference.tokens)
@@ -36,27 +36,30 @@ module.exports = {
 
     let output = '';
     let playerFound = false;
-    let failure, success = 0;
+    let failure = 0, success = 0, counter = 0;
     const validPlayer = ({ id, name, online, last_online, server }) => {
       const unix = Math.floor(Date.parse(last_online) / 1000);
       playerFound = true;
-      online
-        ? output += `\`🟢\` \`Player Online\`\n\`🔗\` ${id}\n\`🔗\` ${server.details.name}\n\`🔗\` <t:${unix}:f>\n\`\`\`${name}\`\`\`\n\n`
-        : output += `\`🟠\` \`Player Offline\`\n\`🔗\` ${id}\n\`🔗\` ${server.details.name}\n\`🔗\` <t:${unix}:f>\n\`\`\`${name}\`\`\`\n\n`
+      if (counter < 5) {
+        online
+          ? output += `\`🟢\` \`Player Online\`\n\`🔗\` ${id.slice(0, 25)}...\n\`🔗\` ${server.details.name.slice(0, 30)}\n\`🔗\` <t:${unix}:f>\n\`🔗\` ${name}\n\n`
+          : output += `\`🟠\` \`Player Offline\`\n\`🔗\` ${id.slice(0, 25)}...\n\`🔗\` ${server.details.name.slice(0, 30)}\n\`🔗\` <t:${unix}:f>\n\`🔗\` ${name}\n\n`
+        counter++
+      }
     }
 
     const filterPlayer = (players, server) => {
       search === 'filter'
         //! Chained operator, conditional from search-type. 
-        ? players.forEach(player => player.name.includes(username) ? validPlayer({ ...player, server, success }) : null)
-        : players.forEach(player => player.name === username ? validPlayer({ ...player, server, success }) : null)
+        ? players.forEach(player => player.name.toLowerCase().includes(username) ? validPlayer({ ...player, server }) : null)
+        : players.forEach(player => player.name.toLowerCase() === username ? validPlayer({ ...player, server }) : null)
     }
 
     try {
       const action = response.data.data.services.map(async server => {
         const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/players`;
         const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
-        response.status === 200 ? filterPlayer(response.data.data.players, server, success++) : failure++
+        response.status === 200 ? (success++, filterPlayer(response.data.data.players, server)) : failure++;
       });
 
       await Promise.all(action)
@@ -64,8 +67,7 @@ module.exports = {
       const successEmbed = async () => {
         const embed = new EmbedBuilder()
           .setColor('#2ecc71')
-          .setTitle('`Obelisk Management`')
-          .setDescription(`${output}The search command was successful.\nScanned \`${success}\` of \`${serverArray.length}\` servers.\nLimited \`25\` objects.`)
+          .setDescription(`${output}Scanned \`${success}\` of \`${serverArray.length}\` servers.\nLimited \`5\` player objects.`)
           .setFooter({ text: 'Tip: Contact support if there are issues.' })
 
         return await interaction.followUp({ embeds: [embed] });
@@ -74,9 +76,9 @@ module.exports = {
       const failureEmbed = async () => {
         const embed = new EmbedBuilder()
           .setColor('#e67e22')
-          .setTitle('`Obelisk Management`')
-          .setDescription(`\`🟠\` \`System Failure\`\nThe selected user cannot be located.\nEnsure correct algorithm selected.\n\n**Additional Information**\nNitrado has yet to register this player.`)
+          .setDescription(`**Game Command Failure**\nSelected player not located.\nPlease try again in an hour.\n\n**Additional Information**\nAwaiting player registration.`)
           .setFooter({ text: 'Tip: Contact support if there are issues.' })
+          .setThumbnail('https://i.imgur.com/PCD2pG4.png')
 
         return await interaction.followUp({ embeds: [embed] });
       }
