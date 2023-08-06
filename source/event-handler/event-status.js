@@ -8,60 +8,93 @@ module.exports = {
   execute(client) {
 
     async function loop() {
-
       const autoMaintenance = (service_id) => {
-        console.log(service_id)
+        console.log(service_id);
       }
 
-      let counter = 0, output = '';
-      let currentPlayers = 0, maximumPlayers = 0;
-      const validDocument = async ({ channels, logging, tokens, maintenance }) => {
+      const pageSize = 5;
+      const validDocument = async ({ channels, logging, nitrado, maintenance }) => {
+        let currentPlayers = 0, maximumPlayers = 0, counter = 0, currentPage = 0, pages = [];
+        let output = '';
+
         const url = 'https://api.nitrado.net/services';
-        const response = await axios.get(url, { headers: { 'Authorization': tokens[0] } })
+        const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
         const serverArr = [...response.data.data.services];
-        console.log(serverArr)
 
         const action = serverArr.map(async server => {
-          let { id, details, suspend_date } = server;
+          let { id, suspend_date } = server;
           let unix = new Date(suspend_date).getTime() / 1000;
 
           const url = `https://api.nitrado.net/services/${id}/gameservers`;
-          const response = await axios.get(url, { headers: { 'Authorization': tokens[0] } })
+          const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
           let { status, service_id, slots, query } = response.data.data.gameserver;
 
-          maintenance[service_id] ? autoMaintenance(service_id) : null
+          maintenance[service_id] ? autoMaintenance(service_id) : null;
           currentPlayers += query.player_current ? query.player_current : 0;
           maximumPlayers += slots;
 
-          if (counter < 10) {
-            if (status === 'restarting') output += `${maintenance[service_id] ? `\`👾\` \`A-S-M\` \`🟠\` \`Service Restarting\`` : ''} \`🟠\` \`Service Restarting\`\n${query.server_name ? query.server_name : 'Gameserver Restarting'}\nPlayer Count: \`(0/${slots})\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${unix}:f>\n\n`
-            if (status === 'stopping') output += '...'
-            if (status === 'updating') output += '...'
+          if (counter < pageSize) {
             if (status === 'started') output += `${maintenance[service_id] ? `\`👾\` \`A-S-M\` \`🟢\` \`Service Online\`` : `\`🟢\` \`Service Online\``}\n${query.server_name ? query.server_name : 'Gameserver Starting'}\nPlayer Count: \`(${query.player_current}/${slots})\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${unix}:f>\n\n`;
-            if (status === 'stopped') output += '...'
-            counter++
+            counter++;
           }
-        })
 
-        await Promise.all(action)
+          if (counter === pageSize) {
+            pages.push(output);
+            output = '';
+            counter = 0;
+          }
+        });
 
-        const unix = Math.floor(Date.now() / 1000);
-        const embed = new EmbedBuilder()
-          .setColor('#2ecc71')
-          .setDescription(`${output}**Global Player Count**\n\`🌐\` \`(${currentPlayers}/${maximumPlayers})\`\n\n<t:${unix}:R>\n**Application Upgrade**\nLorem ipsum dolar esut init duit.\nLorem ipsum dolar esut init duit.`)
-          .setFooter({ text: 'Tip: Contact support if there are issues.' })
+        await Promise.all(action).then(() => {
+          if (output) pages.push(output);
 
-        client.channels.fetch(channels.status).then(async (channel) => {
-          await channel.send({ embeds: [embed] })
-        })
+          const unix = Math.floor(Date.now() / 1000);
+          const row = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setCustomId('previous-page')
+                .setLabel('Previous Page')
+                .setStyle(ButtonStyle.Secondary),
+
+              new ButtonBuilder()
+                .setCustomId('next-page')
+                .setLabel('Next Page')
+                .setStyle(ButtonStyle.Secondary),
+            );
+
+          const embed = new EmbedBuilder()
+            .setColor('#2ecc71')
+            .setDescription(`${pages[currentPage]}**Global Player Count**\n\`🌐\` \`(${currentPlayers}/${maximumPlayers})\`\n\n<t:${unix}:R>\n**Application Upgrade**\nLorem ipsum dolar esut init duit.\nLorem ipsum dolar esut init duit.` || '')
+            .setFooter({ text: 'Tip: Contact support if there are issues.' });
+
+          client.channels.fetch(channels.status).then(async (channel) => {
+            const message = await channel.messages.fetch(channels.message);
+            const filter = (interaction) => ['previous-page', 'next-page'].includes(interaction.customId) && interaction.user.id === interaction.user.id;
+            const collector = message.createMessageComponentCollector({ filter, time: 60000 });
+
+            collector.on('collect', async (interaction) => {
+              interaction.customId === 'previous-page' && currentPage > 0 ? currentPage-- : null
+              interaction.customId === 'next-page' && currentPage < pages.length - 1 ? currentPage++ : null
+
+              const updatedEmbed = new EmbedBuilder()
+                .setColor('#2ecc71')
+                .setDescription(`${pages[currentPage]}**Global Player Count**\n\`🌐\` \`(${currentPlayers}/${maximumPlayers})\`\n\n<t:${unix}:R>\n**Application Upgrade**\nLorem ipsum dolar esut init duit.\nLorem ipsum dolar esut init duit.` || '')
+                .setFooter({ text: 'Tip: Contact support if there are issues.' });
+
+              await interaction.update({ embeds: [updatedEmbed] });
+            });
+
+            await message.edit({ embeds: [embed], components: [row] });
+          });
+        });
       }
 
       const reference = await db.collection('configuration').get();
       reference.forEach(doc => {
-        doc.data() ? validDocument(doc.data()) : console.log('invalid')
-      })
+        doc.data() ? validDocument(doc.data()) : console.log('invalid');
+      });
 
-      setTimeout(loop, 10000);
+      setTimeout(loop, 60000);
     }
     loop();
   },
