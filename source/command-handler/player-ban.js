@@ -46,7 +46,7 @@ module.exports = {
       try {
         const action = serverArray.map(async server => {
           const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
-          const response = await axios.post(url, { identifier: uuid }, { headers: { 'Authorization': reference.tokens[0] } });
+          const response = await axios.post(url, { identifier: uuid }, { headers: { 'Authorization': nitrado.token } });
           console.log(`Secondary ban: ${response.status}`)
           response.status === 200 ? success++ : failure++;
         })
@@ -70,17 +70,17 @@ module.exports = {
     }
 
     const reference = (await db.collection('configuration').doc(guild).get()).data();
-    console.log(reference.tokens)
+    const { nitrado } = reference;
 
     let failure = 0, success = 0;
     const url = 'https://api.nitrado.net/services';
-    const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
+    const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
     const serverArray = [...response.data.data.services]; // Total servers, used for ban calc.
 
     try {
       const action = response.data.data.services.map(async server => {
         const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
-        const response = await axios.post(url, { identifier: username }, { headers: { 'Authorization': reference.tokens[0] } });
+        const response = await axios.post(url, { identifier: username }, { headers: { 'Authorization': nitrado.token } });
         console.log(response.status);
 
         response.status === 200 ? success++ : failure++;
