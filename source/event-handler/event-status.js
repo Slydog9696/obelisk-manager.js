@@ -12,7 +12,7 @@ module.exports = {
         console.log(service_id);
       }
 
-      const pageSize = 5;
+      const pageSize = 10;
       const validDocument = async ({ channels, logging, nitrado, maintenance }) => {
         let currentPlayers = 0, maximumPlayers = 0, counter = 0, currentPage = 0, pages = [];
         let output = '';
@@ -34,7 +34,11 @@ module.exports = {
           maximumPlayers += slots;
 
           if (counter < pageSize) {
-            if (status === 'started') output += `${maintenance[service_id] ? `\`👾\` \`A-S-M\` \`🟢\` \`Service Online\`` : `\`🟢\` \`Service Online\``}\n${query.server_name ? query.server_name : 'Gameserver Starting'}\nPlayer Count: \`(${query.player_current}/${slots})\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${unix}:f>\n\n`;
+            if (status === 'restarting') output += `\`🟠\` \`Service Restarting\`\n${query.server_name ? query.server_name : 'Gameserver Restarting'}\nPlayer Count: \`(0/${slots})\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${unix}:f>\n\n`
+            if (status === 'updating') output += `\`🟠\` \`Service Updating\`\n${query.server_name ? query.server_name : 'Gameserver Restarting'}\nPlayer Count: \`(0/${slots})\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${unix}:f>\n\n`
+            if (status === 'stopping') output += `\`🟠\` \`Service Stopping\`\n${query.server_name ? query.server_name : 'Gameserver Restarting'}\nPlayer Count: \`(0/${slots})\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${unix}:f>\n\n`
+            if (status === 'started') output += `\`🟢\` \`Service Online\`\n${query.server_name ? query.server_name : 'Gameserver Starting'}\nPlayer Count: \`(${query.player_current}/${slots})\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${unix}:f>\n\n`;
+            if (status === 'stopped') output += `\`🔴\` \`Service Stopped\`\n${query.server_name ? query.server_name : 'Gameserver Restarting'}\nPlayer Count: \`(0/${slots})\`\nID: ||${service_id}||\n\n**Server Runtime**\n<t:${unix}:f>\n\n`
             counter++;
           }
 
