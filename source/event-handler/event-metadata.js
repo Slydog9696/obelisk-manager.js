@@ -34,6 +34,7 @@ module.exports = {
       }
 
       //! Loops through each document, if the document exists, runs: validDocument()
+      //! Passes doc.data() which holds the token: 'Nitrado'
       const reference = await db.collection('configuration').get();
       reference.forEach(doc => {
         doc.data() ? validDocument(doc.data()) : console.log('Invalid document.');
