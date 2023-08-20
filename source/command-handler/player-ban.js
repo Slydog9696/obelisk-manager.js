@@ -32,7 +32,7 @@ module.exports = {
     let { username, reason, guild, admin } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
-    const secondaryBanFailure = async () => {
+    const commandFailure = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
         .setDescription(`**Game Command Failure**\nSelected player not located.\nPlease try again in an hour.\n\n**Additional Information**\nAwaiting player registration.`)
@@ -42,35 +42,51 @@ module.exports = {
       return await interaction.followUp({ embeds: [embed] });
     }
 
-    const secondaryBanSuccess = async ({ uuid }) => {
-      try {
-        const action = serverArray.map(async server => {
-          const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
-          const response = await axios.post(url, { identifier: uuid }, { headers: { 'Authorization': nitrado.token } });
-          console.log(`Secondary ban: ${response.status}`)
-          response.status === 200 ? success++ : failure++;
-        })
+    const databaseBackup = async () => {
+      const metadata = (await db.collection('player-metadata').doc('metadata').get()).data()
+      if (metadata[username]) {
+        try {
+          const action = serverArray.map(async server => {
+            const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
+            const response = await axios.post(url, { identifier: metadata[username].uuid }, { headers: { 'Authorization': nitrado.token } });
+            console.log(`Secondary ban: ${response.status}`)
+            response.status === 200 ? success++ : failure++;
+          })
 
-        await Promise.all(action).then(async () => {
-          const embed = new EmbedBuilder()
-            .setColor('#2ecc71')
-            .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nThe player was banned.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
-            .setFooter({ text: 'Tip: Contact support if there are issues.' })
-            .setThumbnail('https://i.imgur.com/CzGfRzv.png')
+          await Promise.all(action).then(async () => {
+            const embed = new EmbedBuilder()
+              .setColor('#2ecc71')
+              .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nGameserver action complete.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
+              .setFooter({ text: 'Tip: Contact support if there are issues.' })
+              .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
-          await interaction.followUp({ embeds: [embed] });
-        })
+            await interaction.followUp({ embeds: [embed] });
+          })
 
-      } catch (error) { if (error.response.data.message === "Can't lookup player name to ID.") return secondaryBanFailure(); };
+        } catch (error) {
+          if (error.response.data.message === "Can't add the user to the banlist.") return duplicateListing();
+          if (error.response.data.message === "Can't lookup player name to ID.") return commandFailure();
+        };
+
+      } else { commandFailure() }
     }
 
-    const secondaryBan = async () => {
-      const metadata = (await db.collection('player-metadata').doc('metadata').get()).data()
-      metadata[username] ? secondaryBanSuccess(metadata[username]) : secondaryBanFailure();
+    const duplicateListing = async () => {
+      await db.collection('player-banned').doc(guild).set({
+        [username]: { admin: admin, reason: reason, unix: unix }
+      }, { merge: true });
+
+      const embed = new EmbedBuilder()
+        .setColor('#2ecc71')
+        .setDescription(`**Game Command Success**\nExecuted on \`${serverArray.length}\` of \`${serverArray.length}\` servers.\nGameserver action complete.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
+        .setFooter({ text: 'Tip: Contact support if there are issues.' })
+        .setThumbnail('https://i.imgur.com/CzGfRzv.png')
+
+      await interaction.followUp({ embeds: [embed] });
     }
 
     const reference = (await db.collection('configuration').doc(guild).get()).data();
-    const { nitrado } = reference;
+    let { nitrado } = reference;
 
     let failure = 0, success = 0;
     const url = 'https://api.nitrado.net/services';
@@ -81,8 +97,6 @@ module.exports = {
       const action = response.data.data.services.map(async server => {
         const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
         const response = await axios.post(url, { identifier: username }, { headers: { 'Authorization': nitrado.token } });
-        console.log(response.status);
-
         response.status === 200 ? success++ : failure++;
       });
 
@@ -92,11 +106,14 @@ module.exports = {
         }, { merge: true });
       });
 
-    } catch (error) { if (error.response.data.message === "Can't lookup player name to ID.") return secondaryBan(); };
+    } catch (error) {
+      if (error.response.data.message === "Can't add the user to the banlist.") return duplicateListing();
+      if (error.response.data.message === "Can't lookup player name to ID.") return databaseBackup();
+    };
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
-      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nThe player was banned.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
+      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nGameserver action complete.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
       .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
