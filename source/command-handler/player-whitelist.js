@@ -7,7 +7,7 @@ process.on("unhandledRejection", (err) => console.error(err));
 
 module.exports = {
   data: new SlashCommandBuilder()
-    .setName('player-unwhitelist')
+    .setName('player-whitelist')
     .setDescription('description ...')
     .addStringOption(option => option.setName('username').setDescription('description').setRequired(true)),
 
@@ -21,11 +21,10 @@ module.exports = {
       admin: interaction.user.id,
     };
 
-    let { username, guild, admin } = input;
+    let { username, guild } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
-    console.log(username)
-    const inputFailure = async () => {
+    const commandFailure = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
         .setDescription(`**Game Command Failure**\nSelected player not located.\nPlease try again in an hour.\n\n**Additional Information**\nAwaiting player registration.`)
@@ -35,26 +34,37 @@ module.exports = {
       return await interaction.followUp({ embeds: [embed] });
     }
 
+    const duplicateListing = async () => {
+      const embed = new EmbedBuilder()
+        .setColor('#2ecc71')
+        .setDescription(`**Game Command Success**\nExecuted on \`${serverArray.length}\` of \`${serverArray.length}\` servers.\nGameserver action complete.\n<t:${unix}:f>`)
+        .setFooter({ text: 'Tip: Contact support if there are issues.' })
+        .setThumbnail('https://i.imgur.com/CzGfRzv.png')
+
+      await interaction.followUp({ embeds: [embed] });
+    }
+
     const reference = (await db.collection('configuration').doc(guild).get()).data();
-    console.log(reference.tokens)
+    let { nitrado } = reference;
 
     let failure = 0, success = 0;
     const url = 'https://api.nitrado.net/services';
-    const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
+    const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
     const serverArray = [...response.data.data.services]; // Total servers, used for calc.
 
     try {
       const action = response.data.data.services.map(async server => {
         const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/whitelist`;
-        const response = await axios.delete(url, { headers: { 'Authorization': reference.tokens[0] } }, { identifier: username });
-        console.log(response.status);
-
+        const response = await axios.post(url, { identifier: username }, { headers: { 'Authorization': nitrado.token } });
         response.status === 200 ? success++ : failure++;
       });
 
       await Promise.all(action)
 
-    } catch (error) { if (error.response.data.message === "Can't lookup player name to ID.") return inputFailure(); };
+    } catch (error) {
+      if (error.response.data.message === "Can't add the user to the whitelist.") return duplicateListing();
+      if (error.response.data.message === "Can't lookup player name to ID.") return commandFailure();
+    };
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
