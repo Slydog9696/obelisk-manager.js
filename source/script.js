@@ -11,7 +11,7 @@ const db = getFirestore();
 
 module.exports = { db };
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages] });
 client.commands = new Collection();
 
 const eventsPath = path.join(__dirname, './event-handler');
