@@ -11,7 +11,7 @@ module.exports = {
       const playerCollection = async (players, { details }) => {
         const reference = (await db.collection('player-metadata').doc('metadata').get()).data()
         players.forEach(async player => {
-          const { id, name, last_online, online } = player;
+          const { id, name, last_online } = player;
           reference[name] ? null : await db.collection('player-metadata').doc('metadata')
             .set({ [name]: { name: name, uuid: id, last_online, server: details.name } }, { merge: true }).then(() => {
               console.log(`Database Written: ${name}`)
@@ -36,6 +36,8 @@ module.exports = {
       });
       setTimeout(loop, 60000);
     }
+    //! Warning: Loop collects tens of thousands of users.
     // loop().then(() => console.log('Loop started:'));
   },
 };
+
