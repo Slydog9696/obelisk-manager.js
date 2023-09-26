@@ -20,7 +20,7 @@ module.exports = {
       admin: interaction.user.id,
     };
 
-    let { username, guild } = input;
+    const { username, guild } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
     const commandFailure = async () => {
@@ -44,7 +44,7 @@ module.exports = {
     }
 
     const reference = (await db.collection('configuration').doc(guild).get()).data();
-    let { nitrado } = reference;
+    const { nitrado } = reference;
 
     let failure = 0, success = 0;
     const url = 'https://api.nitrado.net/services';

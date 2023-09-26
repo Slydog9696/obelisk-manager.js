@@ -17,7 +17,7 @@ module.exports = {
       guild: interaction.guild.id,
     };
 
-    let { username, guild } = input;
+    const { username, guild } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
     const invalidPlayer = async () => {

@@ -24,14 +24,14 @@ module.exports = {
       guild: interaction.guild.id,
     };
 
-    let { username, guild, search } = input;
+    const { username, guild, search } = input;
     username = username.toLowerCase().includes('#') ? username.replace('#', '') : username.toLowerCase();
 
     const reference = (await db.collection('configuration').doc(guild).get()).data();
-    console.log(reference.tokens)
+    const { nitrado } = reference;
 
     const url = 'https://api.nitrado.net/services';
-    const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
+    const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
     const serverArray = [...response.data.data.services]; // Total servers, used for ban calc.
 
     let output = '';
@@ -58,12 +58,11 @@ module.exports = {
     try {
       const action = response.data.data.services.map(async server => {
         const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/players`;
-        const response = await axios.get(url, { headers: { 'Authorization': reference.tokens[0] } });
+        const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
         response.status === 200 ? (success++, filterPlayer(response.data.data.players, server)) : failure++;
       });
 
       await Promise.all(action)
-
       const successEmbed = async () => {
         const embed = new EmbedBuilder()
           .setColor('#2ecc71')
