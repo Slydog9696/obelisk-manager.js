@@ -7,8 +7,8 @@ process.on("unhandledRejection", (err) => console.error(err));
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('player-search')
-    .setDescription('description ...')
-    .addStringOption(option => option.setName('username').setDescription('description').setRequired(true))
+    .setDescription('Performs an in-game player action.')
+    .addStringOption(option => option.setName('username').setDescription('Selected action will be performed on given tag.').setRequired(true))
     .addStringOption(option => option.setName('search-algorithm').setDescription('description').setRequired(true)
       .addChoices(
         { name: 'Type: Filter-Search', value: 'filter' }, //! General match, any.

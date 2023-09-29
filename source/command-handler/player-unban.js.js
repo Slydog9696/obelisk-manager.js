@@ -8,8 +8,8 @@ process.on("unhandledRejection", (err) => console.error(err));
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('player-unban')
-    .setDescription('description ...')
-    .addStringOption(option => option.setName('username').setDescription('description').setRequired(true)),
+    .setDescription('Performs an in-game player action.')
+    .addStringOption(option => option.setName('username').setDescription('Selected action will be performed on given tag.').setRequired(true)),
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: false });
