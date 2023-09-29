@@ -21,7 +21,7 @@ module.exports = {
       admin: interaction.user.id,
     };
 
-    const { username, guild } = input;
+    let { username, guild } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
     const commandFailure = async () => {

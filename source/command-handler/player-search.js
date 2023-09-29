@@ -24,7 +24,7 @@ module.exports = {
       guild: interaction.guild.id,
     };
 
-    const { username, guild, search } = input;
+    let { username, guild, search } = input;
     username = username.toLowerCase().includes('#') ? username.replace('#', '') : username.toLowerCase();
 
     const reference = (await db.collection('configuration').doc(guild).get()).data();

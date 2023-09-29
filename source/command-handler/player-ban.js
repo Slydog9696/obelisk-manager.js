@@ -29,7 +29,7 @@ module.exports = {
       admin: interaction.user.id,
     };
 
-    const { username, reason, guild, admin } = input;
+    let { username, reason, guild, admin } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
     const commandFailure = async () => {
