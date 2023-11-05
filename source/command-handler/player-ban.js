@@ -10,13 +10,7 @@ module.exports = {
     .setDescription('Performs an in-game player action.')
     .addStringOption(option => option.setName('username').setDescription('Selected action will be performed on given tag.').setRequired(true))
     .addStringOption(option => option.setName('reason').setDescription('Required to submit ban action.').setRequired(true)
-      .addChoices(
-        { name: 'Breaking Rules', value: 'breaking rules' },
-        { name: 'Cheating', value: 'cheating' },
-        { name: 'Behavior', value: 'behavior' },
-        { name: 'Meshing', value: 'meshing' },
-        { name: 'Other', value: 'other reasons' }
-      )),
+      .addChoices({ name: 'Breaking Rules', value: 'breaking rules' }, { name: 'Cheating', value: 'cheating' }, { name: 'Behavior', value: 'behavior' }, { name: 'Meshing', value: 'meshing' }, { name: 'Other', value: 'other reasons' })),
 
   async execute(interaction) {
     await interaction.deferReply({ ephemeral: false });
@@ -36,19 +30,14 @@ module.exports = {
     const platforms = { arkxb: true, arkps: true, arkse: true }
 
     const error = async () => {
-      console.log('Alert: Unknown back-end error.')
+      const embed = new EmbedBuilder()
+        .setColor('#e67e22')
+        .setDescription(`**Game Command Failure**\nSelected player not located.\nPlease try again in an hour.\n\n**Additional Information**\nAwaiting player registration.`)
+        .setFooter({ text: 'Tip: Contact support if there are issues.' })
+        .setThumbnail('https://i.imgur.com/PCD2pG4.png')
 
+      return await interaction.followUp({ embeds: [embed] });
       //! Command failure issue, rare embed. 
-    }
-
-    const secondary = async () => {
-      console.log('Alert: Attempting to ban via id.')
-      //! Attempt to ban player via stored id.
-    }
-
-    const duplicate = async () => {
-      console.log('Alert: Player is already banned.')
-      //! Alert user that player is already banned.
     }
 
     const reference = (await db.collection('configuration').doc(guild).get()).data();
@@ -61,10 +50,10 @@ module.exports = {
     try {
       const action = response.data.data.services.map(async server => {
         if (platforms[server.details.portlist_short]) {
+          services.push(server.id)
           const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
           const response = await axios.post(url, { identifier: username }, { headers: { 'Authorization': nitrado.token } });
           response.status === 200 ? success++ : failure++;
-          services.push(server.id)
         }
       });
 
@@ -74,14 +63,14 @@ module.exports = {
         }, { merge: true });
       });
 
-    } catch (error) {
-      if (error.response.data.message === "Can't add the user to the banlist.") return duplicate();
-      if (error.response.data.message === "Can't lookup player name to ID.") return secondary();
+    } catch (err) {
+      if (err.response.data.message === "Can't add the user to the banlist.") console.log('Duplicate ban detected, automated success'), success++;
+      if (err.response.data.message === "Can't lookup player name to ID.") return error();
     };
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
-      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${services.length}\` servers.\nGameserver action complete.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
+      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${services.length}\` servers.\nGameserver action completed.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
       .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
