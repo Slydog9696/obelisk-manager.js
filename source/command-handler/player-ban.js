@@ -26,8 +26,9 @@ module.exports = {
     let { username, reason, guild, admin } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
-    const services = []; // Total servers, used for ban calc.
-    const platforms = { arkxb: true, arkps: true, arkse: true }
+    const reference = (await db.collection('configuration').doc(guild).get()).data();
+    const platforms = { arkxb: true, arkps: true, arkse: true };
+    const services = [];
 
     const error = async () => {
       const embed = new EmbedBuilder()
@@ -40,19 +41,16 @@ module.exports = {
       //! Command failure issue, rare embed. 
     }
 
-    const reference = (await db.collection('configuration').doc(guild).get()).data();
-    const { nitrado } = reference;
-
     let failure = 0, success = 0;
     const url = 'https://api.nitrado.net/services';
-    const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
+    const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
 
     try {
       const action = response.data.data.services.map(async server => {
         if (platforms[server.details.portlist_short]) {
           services.push(server.id)
           const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
-          const response = await axios.post(url, { identifier: username }, { headers: { 'Authorization': nitrado.token } });
+          const response = await axios.post(url, { identifier: username }, { headers: { 'Authorization': reference.nitrado.token } });
           response.status === 200 ? success++ : failure++;
         }
       });
@@ -70,7 +68,7 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
-      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${services.length}\` servers.\nGameserver action completed.\n<t:${unix}:f>\n\nRemoved for ${reason}.`)
+      .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${services.length}\` servers.\n<t:${unix}:f>`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
       .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 

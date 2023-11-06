@@ -24,7 +24,11 @@ module.exports = {
     let { username, guild } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
-    const commandFailure = async () => {
+    const reference = (await db.collection('configuration').doc(guild).get()).data();
+    const platforms = { arkxb: true, arkps: true, arkse: true };
+    const services = [];
+
+    const error = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
         .setDescription(`**Game Command Failure**\nSelected player not located.\nPlease try again in an hour.\n\n**Additional Information**\nAwaiting player registration.`)
@@ -32,65 +36,21 @@ module.exports = {
         .setThumbnail('https://i.imgur.com/PCD2pG4.png')
 
       return await interaction.followUp({ embeds: [embed] });
+      //! Command failure issue, rare embed. 
     }
-
-    const databaseBackup = async () => {
-      const metadata = (await db.collection('player-metadata').doc('metadata').get()).data()
-
-      if (metadata[username]) {
-        try {
-          const action = serverArray.map(async server => {
-            const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
-            const response = await axios.delete(url, { headers: { 'Authorization': nitrado.token }, data: { identifier: metadata[username].uuid } });
-            console.log(`Secondary unban: ${response.status}`)
-            response.status === 200 ? success++ : failure++;
-          })
-
-          await Promise.all(action).then(async () => {
-            const embed = new EmbedBuilder()
-              .setColor('#2ecc71')
-              .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nThe player was unbanned.\n<t:${unix}:f>`)
-              .setFooter({ text: 'Tip: Contact support if there are issues.' })
-              .setThumbnail('https://i.imgur.com/CzGfRzv.png')
-
-            await interaction.followUp({ embeds: [embed] });
-          })
-
-        } catch (error) {
-          if (error.response.data.message === "Can't remove the user from the banlist.") return duplicateListing();
-          if (error.response.data.message === "Can't lookup player name to ID.") return commandFailure();
-        };
-
-      } else { commandFailure() }
-    }
-
-    const duplicateListing = async () => {
-      await db.collection('player-banned').doc(guild).set({
-        [username]: FieldValue.delete()
-      }, { merge: true });
-
-      const embed = new EmbedBuilder()
-        .setColor('#2ecc71')
-        .setDescription(`**Game Command Success**\nExecuted on \`${serverArray.length}\` of \`${serverArray.length}\` servers.\nGameserver action complete.\n<t:${unix}:f>`)
-        .setFooter({ text: 'Tip: Contact support if there are issues.' })
-        .setThumbnail('https://i.imgur.com/CzGfRzv.png')
-
-      await interaction.followUp({ embeds: [embed] });
-    }
-
-    const reference = (await db.collection('configuration').doc(guild).get()).data();
-    const { nitrado } = reference;
 
     let failure = 0, success = 0;
     const url = 'https://api.nitrado.net/services';
-    const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
-    const serverArray = [...response.data.data.services]; // Total servers, used for calc.
+    const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
 
     try {
       const action = response.data.data.services.map(async server => {
-        const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
-        const response = await axios.delete(url, { headers: { 'Authorization': nitrado.token }, data: { identifier: username } });
-        response.status === 200 ? success++ : failure++;
+        if (platforms[server.details.portlist_short]) {
+          services.push(server.id)
+          const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
+          const response = await axios.delete(url, { headers: { 'Authorization': reference.nitrado.token }, data: { identifier: username } });
+          response.status === 200 ? success++ : failure++;
+        }
       });
 
       await Promise.all(action).then(async () => {
@@ -99,14 +59,15 @@ module.exports = {
         }, { merge: true });
       });
 
-    } catch (error) {
-      if (error.response.data.message === "Can't remove the user from the banlist.") return duplicateListing();
-      if (error.response.data.message === "Can't lookup player name to ID.") return databaseBackup();
+    } catch (err) {
+      console.log(err)
+      if (err.response.data.message === "Can't remove the user from the banlist.") console.log('Duplicate listing detected, automated success'), success++;
+      if (err.response.data.message === "Can't lookup player name to ID.") return error();
     };
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
-      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${serverArray.length}\` servers.\nGameserver action complete.\n<t:${unix}:f>`)
+      .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${services.length}\` servers.\n<t:${unix}:f>`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
       .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 
