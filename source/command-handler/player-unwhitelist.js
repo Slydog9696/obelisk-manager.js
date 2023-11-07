@@ -44,24 +44,26 @@ module.exports = {
 
     try {
       const action = response.data.data.services.map(async server => {
-        if (platforms[server.details.portlist_short]) {
+        if (platforms[server.details.folder_short]) {
           services.push(server.id)
-          const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/whitelist`;
-          const response = await axios.delete(url, { headers: { 'Authorization': reference.nitrado.token }, data: { identifier: username } });
-          response.status === 200 ? success++ : failure++;
+
+          try {
+            const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/whitelist`;
+            const response = await axios.delete(url, { headers: { 'Authorization': reference.nitrado.token }, data: { identifier: username } });
+            response.status === 200 ? success++ : failure++;
+          } catch (err) { if (err.response.data.message === "Can't remove the user from the whitelist.") console.log('Duplicate ban detected, automated success'), success++; };
         };
       });
 
       await Promise.all(action)
 
     } catch (err) {
-      if (err.response.data.message === "Can't remove the user from the whitelist.") console.log('Duplicate listing detected, automated success'), success++;
       if (err.response.data.message === "Can't lookup player name to ID.") return error();
     };
 
     const embed = new EmbedBuilder()
       .setColor('#2ecc71')
-      .setDescription(`**Game Command Success**\nExecuted on \`${success}\` of \`${services.length}\` servers.\nThe player was unwhitelisted.\n<t:${unix}:f>`)
+      .setDescription(`**Game Command Success**\nGameserver action completed.\nExecuted on \`${success}\` of \`${services.length}\` servers.\n<t:${unix}:f>`)
       .setFooter({ text: 'Tip: Contact support if there are issues.' })
       .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 

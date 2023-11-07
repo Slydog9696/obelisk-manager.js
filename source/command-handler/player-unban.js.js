@@ -45,12 +45,15 @@ module.exports = {
 
     try {
       const action = response.data.data.services.map(async server => {
-        if (platforms[server.details.portlist_short]) {
+        if (platforms[server.details.folder_short]) {
           services.push(server.id)
-          const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
-          const response = await axios.delete(url, { headers: { 'Authorization': reference.nitrado.token }, data: { identifier: username } });
-          response.status === 200 ? success++ : failure++;
-        }
+
+          try {
+            const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/banlist`;
+            const response = await axios.delete(url, { headers: { 'Authorization': reference.nitrado.token }, data: { identifier: username } });
+            response.status === 200 ? success++ : failure++;
+          } catch (err) { if (err.response.data.message === "Can't remove the user from the banlist.") console.log('Duplicate ban detected, automated success'), success++; };
+        };
       });
 
       await Promise.all(action).then(async () => {
@@ -60,8 +63,6 @@ module.exports = {
       });
 
     } catch (err) {
-      console.log(err)
-      if (err.response.data.message === "Can't remove the user from the banlist.") console.log('Duplicate listing detected, automated success'), success++;
       if (err.response.data.message === "Can't lookup player name to ID.") return error();
     };
 
