@@ -8,7 +8,6 @@ module.exports = {
   execute(client) {
     async function loop() {
 
-      let output = '';
       let counter = 0, current = 0, page = 0;
       const validService = async (nitrado, status, services) => {
         const platforms = { arkxb: true, arkps: true, arkse: true };
@@ -22,7 +21,6 @@ module.exports = {
               const response = await axios.get(url, { headers: { Authorization: nitrado.token } });
               const { status, query } = response.data.data.gameserver;
               const { suspend_date } = service;
-              counter++;
 
               return { status, query, service, suspend_date };
             }
@@ -30,11 +28,11 @@ module.exports = {
         );
 
         const sortedActions = actions
-          .filter((action) => action) // Filtering out undefined values.
-          .sort((a, b) => b.query.player_current - a.query.player_current); // Sorting based on current population.
+          .filter((action) => action) // Filtering out undefined values
+          .sort((a, b) => b.query.player_current - a.query.player_current); // Sorting based on current population
 
         let output = '';
-        sortedActions.slice(0, 5).forEach((action) => {
+        sortedActions.slice(0, 10).forEach((action) => {
           const { status, query, service, suspend_date } = action;
           const time = new Date(suspend_date).getTime() / 1000;
 
@@ -54,6 +52,7 @@ module.exports = {
             case 'stopped':
               output += `\`🔴\` \`Service Stopped\`\n${query.server_name.slice(0, 40)}...\nPlayer Count: \`${query.player_current}/${query.player_max}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
               break;
+
             default:
               break;
           }
