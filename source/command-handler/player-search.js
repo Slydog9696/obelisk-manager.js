@@ -27,6 +27,19 @@ module.exports = {
     let { username, guild, search } = input;
     username = username.toLowerCase().includes('#') ? username.replace('#', '') : username.toLowerCase();
 
+    const administrator = 'Obelisk Permission'
+    await interaction.guild.roles.fetch().then(async roles => {
+      const role = roles.find(role => role.name === administrator);
+      if (!role || !interaction.member.roles.cache.has(role.id)) {
+        const embed = new EmbedBuilder()
+          .setColor('#e67e22')
+          .setTitle('`Obelisk Management`')
+          .setDescription(`\`🟠\` \`System Failure\`\nYou do not have the required permissions.\nPlease ask an administrator for access.\n\n**Troubleshooting & Solution**\nRole: \`${administrator}\` is required.\nThe role is generated upon token setup.`);
+
+        return interaction.followUp({ embeds: [embed] });
+      }
+    })
+
     const reference = (await db.collection('configuration').doc(guild).get()).data();
     const { nitrado } = reference;
 
@@ -40,7 +53,7 @@ module.exports = {
     const validPlayer = ({ id, name, online, last_online, server }) => {
       const unix = Math.floor(Date.parse(last_online) / 1000);
       playerFound = true;
-      if (counter < 5) {
+      if (counter < 10) {
         online
           ? output += `\`🟢\` \`Player Online\`\n\`🔗\` ${id.slice(0, 25)}...\n\`🔗\` ${server.details.name.slice(0, 30)}\n\`🔗\` <t:${unix}:f>\n\`🔗\` ${name}\n\n`
           : output += `\`🟠\` \`Player Offline\`\n\`🔗\` ${id.slice(0, 25)}...\n\`🔗\` ${server.details.name.slice(0, 30)}\n\`🔗\` <t:${unix}:f>\n\`🔗\` ${name}\n\n`
@@ -56,10 +69,13 @@ module.exports = {
     }
 
     try {
+      //! Add try/catch to ensure smooth operation. 
       const action = response.data.data.services.map(async server => {
-        const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/players`;
-        const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
-        response.status === 200 ? (success++, filterPlayer(response.data.data.players, server)) : failure++;
+        try {
+          const url = `https://api.nitrado.net/services/${server.id}/gameservers/games/players`;
+          const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
+          response.status === 200 ? (success++, filterPlayer(response.data.data.players, server)) : failure++;
+        } catch (err) { null };
       });
 
       await Promise.all(action)
@@ -72,7 +88,7 @@ module.exports = {
         return await interaction.followUp({ embeds: [embed] });
       }
 
-      const failureEmbed = async () => {
+      const error = async () => {
         const embed = new EmbedBuilder()
           .setColor('#e67e22')
           .setDescription(`**Game Command Failure**\nSelected player not located.\nPlease try again in an hour.\n\n**Additional Information**\nAwaiting player registration.`)
@@ -82,8 +98,8 @@ module.exports = {
         return await interaction.followUp({ embeds: [embed] });
       }
 
-      playerFound ? successEmbed() : failureEmbed()
+      playerFound ? successEmbed() : error()
 
-    } catch (error) { console.log(error) };
+    } catch (err) { console.log(err) };
   }
 };

@@ -20,6 +20,19 @@ module.exports = {
     let { username, guild } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
+    const administrator = 'Obelisk Permission'
+    await interaction.guild.roles.fetch().then(async roles => {
+      const role = roles.find(role => role.name === administrator);
+      if (!role || !interaction.member.roles.cache.has(role.id)) {
+        const embed = new EmbedBuilder()
+          .setColor('#e67e22')
+          .setTitle('`Obelisk Management`')
+          .setDescription(`\`🟠\` \`System Failure\`\nYou do not have the required permissions.\nPlease ask an administrator for access.\n\n**Troubleshooting & Solution**\nRole: \`${administrator}\` is required.\nThe role is generated upon token setup.`);
+
+        return interaction.followUp({ embeds: [embed] });
+      }
+    })
+
     const invalidPlayer = async () => {
       const embed = new EmbedBuilder()
         .setColor('#e67e22')
@@ -33,7 +46,7 @@ module.exports = {
     const validPlayer = async ({ admin, reason, unix }) => {
       const embed = new EmbedBuilder()
         .setColor('#2ecc71')
-        .setDescription(`**Game Command Success**\nSelected user was located.\n<t:${unix}:f>\n\nRemoved for ${reason}.\nBy: <@${admin}>`)
+        .setDescription(`**Game Command Success**\nSelected user was located.\nLocal data will be shown.\n\n<t:${unix}:f>\nRemoved for ${reason}.\nAdmin: <@${admin}>`)
         .setFooter({ text: 'Tip: Contact support if there are issues.' })
         .setThumbnail('https://i.imgur.com/CzGfRzv.png')
 

@@ -26,6 +26,19 @@ module.exports = {
     let { username, reason, guild, admin } = input;
     username = username.includes('#') ? username.replace('#', '') : username;
 
+    const administrator = 'Obelisk Permission'
+    await interaction.guild.roles.fetch().then(async roles => {
+      const role = roles.find(role => role.name === administrator);
+      if (!role || !interaction.member.roles.cache.has(role.id)) {
+        const embed = new EmbedBuilder()
+          .setColor('#e67e22')
+          .setTitle('`Obelisk Management`')
+          .setDescription(`\`🟠\` \`System Failure\`\nYou do not have the required permissions.\nPlease ask an administrator for access.\n\n**Troubleshooting & Solution**\nRole: \`${administrator}\` is required.\nThe role is generated upon token setup.`);
+
+        return interaction.followUp({ embeds: [embed] });
+      }
+    })
+
     const reference = (await db.collection('configuration').doc(guild).get()).data();
     const platforms = { arkxb: true, arkps: true, arkse: true };
     const services = [];
