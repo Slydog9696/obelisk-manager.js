@@ -1,4 +1,4 @@
-const { ActionRowBuilder, Events, ModalBuilder, ChannelType, TextInputBuilder, TextInputStyle, EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, Events, ModalBuilder, ChannelType, TextInputBuilder, TextInputStyle, EmbedBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const { db } = require('../script.js');
 const axios = require('axios');
 
@@ -11,8 +11,6 @@ module.exports = {
     client.on(Events.InteractionCreate, async interaction => {
 
       try {
-        const reference = (await db.collection('configuration').doc(interaction.guild.id).get()).data();
-
         if (interaction.customId === 'setup-token') {
           const modal = new ModalBuilder()
             .setCustomId('token-modal')
@@ -32,41 +30,8 @@ module.exports = {
         }
 
         if (interaction.customId === 'token-modal') {
-
           const invalidToken = async () => {
-            const button = new ActionRowBuilder()
-              .addComponents(
-                new ButtonBuilder()
-                  .setURL('https://discord.gg/jee3ukfvVr')
-                  .setLabel('Support Server')
-                  .setStyle(ButtonStyle.Link),
-              );
-
-            const embed = new EmbedBuilder()
-              .setColor('#e67e22')
-              .setDescription(`**Error Function: Invalid Token**\nUh, oh! Seems the token you provided is not valid or is missing permissions. Review the section above, and ensure you follow the preview video.\n\n**[Partnership & Information](https://www.nitrado-aff.com/2M731JR/D42TT/ \"Nitrado Partner Link\")**\nConsider using our partnership link to purchase your personal servers to help fund our services!`)
-              .setFooter({ text: 'Tip: Contact support if there are issues.' })
-              .setImage('https://i.imgur.com/2ZIHUgx.png')
-
-            await interaction.reply({ embeds: [embed], components: [button], ephemeral: true });
-          }
-
-          const invalidCommunity = async () => {
-            const button = new ActionRowBuilder()
-              .addComponents(
-                new ButtonBuilder()
-                  .setURL('https://discord.gg/jee3ukfvVr')
-                  .setLabel('Support Server')
-                  .setStyle(ButtonStyle.Link),
-              );
-
-            const embed = new EmbedBuilder()
-              .setColor('#e67e22')
-              .setDescription(`**Error Function: Invalid Community**\nUh, oh! Seems __this__ guild is not set as a community which does not allow forums to be created for our logging. Read [here](https://support.discord.com/hc/en-us/articles/360047132851-Enabling-Your-Community-Server \"helpdesk-discord\") to enable!\n\n**[Partnership & Information](https://www.nitrado-aff.com/2M731JR/D42TT/ \"Nitrado Partner Link\")**\nConsider using our partnership link to purchase your personal servers to help fund our services!`)
-              .setFooter({ text: 'Tip: Contact support if there are issues.' })
-              .setImage('https://i.imgur.com/2ZIHUgx.png')
-
-            await interaction.reply({ embeds: [embed], components: [button], ephemeral: true });
+            await interaction.reply({ content: 'Setup failure, ensure you follow provided steps above.', ephemeral: true });
           }
 
           const validToken = async ({ token }) => {
@@ -100,88 +65,65 @@ module.exports = {
             const nitrado = { token: interaction.fields.getTextInputValue('token-option') };
 
             const url = 'https://oauth.nitrado.net/token';
-            const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } })
-            response.status === 200 ? validToken(nitrado) : invalidToken()
+            const response = await axios.get(url, { headers: { 'Authorization': nitrado.token } });
+            response.status === 200 && interaction.guild.features.includes('COMMUNITY')
+              ? validToken(nitrado) : invalidToken()
 
-          } catch (error) { invalidToken() }
+          } catch (error) { invalidToken(), console.log(error.response.data.message) }
         }
 
         if (interaction.customId === 'base-version') {
+          const sent = await interaction.reply({ content: 'Installation starting...', ephemeral: true })
+
+          const roles = await interaction.guild.roles.fetch();
+          const action = roles.map(async role => role.name === 'Obelisk Permission' ? await role.delete() : null);
+          try { await Promise.all(action) } catch (error) { return await sent.edit({ content: 'In your settings, move the bot above the permission role.', ephemeral: true }) };
+
+          await sent.edit({ content: '33.33% - Managing permissions...', ephemeral: true });
+          const role = await interaction.guild.roles.create({
+            name: 'Obelisk Permission',
+            color: '#2ecc71',
+          }).then(() => console.log('Role created...'));
+
+          const permissions = [{
+            id: interaction.guild.id,
+            deny: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory],
+          }];
+
           const management = await interaction.guild.channels.create({
             name: `Obelisk Management`,
             type: ChannelType.GuildCategory,
-          });
-
-          const collector = await interaction.guild.channels.create({
-            name: `Obelisk Db Collector`,
-            type: ChannelType.GuildCategory,
-          });
-
-          const logging = await interaction.guild.channels.create({
-            name: `Obelisk Game Logging`,
-            type: ChannelType.GuildCategory,
+            permissionOverwrites: permissions
           });
 
           const commands = await interaction.guild.channels.create({
             name: '⚫│𝗕ot-𝗖ommands',
             type: ChannelType.GuildText,
-            parent: management,
+            permissionOverwrites: permissions,
+            parent: management
           });
 
           const status = await interaction.guild.channels.create({
             name: '⚫│𝗦erver-𝗦tatus',
             type: ChannelType.GuildText,
-            parent: management,
+            permissionOverwrites: permissions,
+            parent: management
           });
 
-          const playerCollector = await interaction.guild.channels.create({
-            name: '📄│𝗣layer-𝗖ollector',
-            type: ChannelType.GuildText,
-            parent: collector,
-          });
+          await sent.edit({ content: '66.66% - Pushing channels to database...', ephemeral: true });
 
-          const onlineLogging = await interaction.guild.channels.create({
-            name: '🔗│𝗢nline-𝗟ogging',
-            type: ChannelType.GuildForum,
-            parent: logging,
-          });
-
-          const auditLogging = await interaction.guild.channels.create({
-            name: '🔗│𝗔udit-𝗟ogging',
-            type: ChannelType.GuildForum,
-            parent: logging,
-          });
-
-          const url = 'https://api.nitrado.net/services';
-          const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-
-          const threadCount = [];
-          response.data.data.services.forEach(async server => {
-            const { id, details } = server;
-
-            //! Obtain channel/message identifier.
-            //! Used to send data to discord.
-            const onlineLoggingThread = await onlineLogging.threads.create({
-              name: `${details.name}` || `Gameserver Unknown - ${id}`,
-              type: ChannelType.PrivateThread,
-              message: { content: details.name }
-            })
-
-            threadCount.push(id)
-          })
-
-          //! Pushes all current servers to database.
-          //! Used to ensure all servers are connected.
+          const message = await status.send({ content: 'test' });
           await db.collection('configuration').doc(interaction.guild.id)
-            .set({ ['threadcount']: threadCount })
+            .set({ ['status']: { channel: status.id, message: message.id } }, { merge: true });
+
+          await sent.edit({ content: '99.99% - Confirming additional safeguards...', ephemeral: true })
+            .then(async () => { await new Promise(resolve => setTimeout(resolve, 3000)) })
+            .then(async () => await sent.edit({ content: '100.00% - Installation completed...', ephemeral: true }))
+
 
         }
 
-        if (interaction.customId === 'upgraded-version') {
-          console.log('Setting up upgraded version')
-        }
-
-      } catch (error) { console.log(error) };
+      } catch (error) { null };
     });
   },
 };

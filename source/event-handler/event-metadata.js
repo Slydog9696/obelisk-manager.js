@@ -5,7 +5,7 @@ const axios = require('axios');
 module.exports = {
   name: Events.ClientReady,
   once: true,
-  execute(client) {
+  execute() {
     async function loop() {
 
       const playerCollection = async (players, { details }) => {
@@ -34,10 +34,9 @@ module.exports = {
       reference.forEach(doc => {
         doc.data() ? validDocument(doc.data()) : console.log('Invalid document.');
       });
-      setTimeout(loop, 60000);
+      setTimeout(loop, 60000); // 10m
     }
     //! Warning: Loop collects tens of thousands of users.
     // loop().then(() => console.log('Loop started:'));
   },
 };
-

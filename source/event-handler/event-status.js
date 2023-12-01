@@ -10,7 +10,7 @@ module.exports = {
 
       let counter = 0, current = 0, page = 0;
       const validService = async (nitrado, status, services) => {
-        const platforms = { arkxb: true, arkps: true, arkse: true };
+        const platforms = { arkxb: true, arkps: true, arkse: true, arksa: true };
         const channel = await client.channels.fetch(status.channel);
         const message = await channel.messages.fetch(status.message);
 
@@ -38,19 +38,19 @@ module.exports = {
 
           switch (status) {
             case 'started':
-              output += `\`🟢\` \`Service Online\`\n${query.server_name.slice(0, 40)}...\nPlayer Count: \`${query.player_current}/${query.player_max}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+              output += `\`🟢\` \`Service Online\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Nitrado Outage'}...\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
               break;
             case 'restarted':
-              output += `\`🟠\` \`Service Restarting\`\n${query.server_name.slice(0, 40)}...\nPlayer Count: \`${query.player_current}/${query.player_max}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+              output += `\`🟠\` \`Service Restarting\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Nitrado Outage'}...\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
               break;
             case 'updating':
-              output += `\`🟠\` \`Service Updating\`\n${query.server_name.slice(0, 40)}...\nPlayer Count: \`${query.player_current}/${query.player_max}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+              output += `\`🟠\` \`Service Updating\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Nitrado Outage'}...\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
               break;
             case 'stopping':
-              output += `\`🔴\` \`Service Stopping\`\n${query.server_name.slice(0, 40)}...\nPlayer Count: \`${query.player_current}/${query.player_max}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+              output += `\`🔴\` \`Service Stopping\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Nitrado Outage'}...\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
               break;
             case 'stopped':
-              output += `\`🔴\` \`Service Stopped\`\n${query.server_name.slice(0, 40)}...\nPlayer Count: \`${query.player_current}/${query.player_max}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
+              output += `\`🔴\` \`Service Stopped\`\n${query.server_name ? query.server_name.slice(0, 40) : 'Nitrado Outage'}...\nPlayer Count: \`${query.player_current ? query.player_current : 0}/${query.player_max ? query.player_max : 0}\`\nID: ||${service.id}||\n\n**Server Runtime**\n<t:${time}:f>\n\n`;
               break;
 
             default:
@@ -60,14 +60,12 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setColor('#2ecc71')
-          .setDescription(`${output}`)
+          .setDescription(`${output}**[Partnership & Information](https://www.nitrado-aff.com/2M731JR/D42TT/)**\nConsider using our partnership link to purchase your personal servers to help fund our services!`)
           .setFooter({ text: 'Tip: Contact support if there are issues.' })
           .setImage('https://i.imgur.com/2ZIHUgx.png');
 
         await message.edit({ embeds: [embed] });
       };
-
-
 
       const validToken = async (nitrado, status) => {
         const url = 'https://api.nitrado.net/services';
