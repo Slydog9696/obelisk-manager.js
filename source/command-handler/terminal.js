@@ -40,56 +40,5 @@ module.exports = {
     })
 
     await interaction.followUp({ content: `${success}/${services.length}` });
-
-
-
-
-    // const { guild, identifier } = input;
-    // const platforms = { arksa: true };
-    // const services = [];
-
-    // let failure = 0, success = 0;
-    // const url = 'https://api.nitrado.net/services';
-    // const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-
-    // const action = response.data.data.services.map(async server => {
-    //   const url = `https://api.nitrado.net/services/${server.id}/gameservers`;
-    //   const response = await axios.get(url, { headers: { 'Authorization': reference.nitrado.token } });
-    //   response.status === 200
-
-    //   const { rcon_port, ip, settings: { config: { "current-admin-password": password } } } = response.data.data.gameserver;
-    //   const info = { host: ip, port: rcon_port, password: password };
-    //   const rcon = await Rcon.connect(info)
-
-    //   const command = `GiveTekEngramsTo ${identifier} PrimalItemArmor_TekPants`;
-    //   await rcon.send(command).then(async () => { console.log('Command sent...'), await rcon.end() });
-    // })
   }
 };
-
-// // RCON server information
-// const rconOptions = {
-//   host: '217.114.196.71',
-//   port: 11150,
-//   password: 'FyWpkdC9',
-// };
-
-// // Function to send a command to the RCON server
-// async function sendRconCommand(command) {
-//   try {
-//     const rcon = await Rcon.connect(rconOptions);
-
-//     // Send the command
-//     const response = await rcon.send(command);
-//     console.log(`Command "${command}" sent successfully. Response: ${response}`);
-
-//     // Close the RCON connection
-//     await rcon.end();
-//   } catch (err) {
-//     console.error(`Error: ${err.message}`);
-//   }
-// }
-
-// // Example: Sending a command to the server
-// const commandToSend = 'DestroyWildDinos';
-// sendRconCommand(commandToSend);
